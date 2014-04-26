@@ -1,5 +1,9 @@
 import sbt._
-import Keys._
+import sbt.ForkOptions
+import sbt.Keys._
+import sbt.LoggedOutput
+import scala.Some
+import scala.xml.Group
 import xml.Group
 //import sbtscalashim.Plugin._
 import sbtbuildinfo.Plugin._
@@ -53,8 +57,8 @@ object build extends Build {
 
   val json4sSettings = Defaults.defaultSettings ++ mavenCentralFrouFrou ++ Seq(
     organization := "org.json4s",
-    scalaVersion := "2.10.0",
-    crossScalaVersions := Seq("2.10.0", "2.11.0"),
+    scalaVersion := "2.10.4",
+    crossScalaVersions := Seq("2.10.4", "2.11.0"),
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings", "-language:existentials", "-language:implicitConversions", "-language:higherKinds", "-language:reflectiveCalls", "-language:postfixOps"),
     version := "3.2.10-SNAPSHOT",
     javacOptions ++= Seq("-target", "1.6", "-source", "1.6"),
@@ -80,18 +84,32 @@ object build extends Build {
     )
   )
 
+  lazy val meta = Project(
+    id = "json4s-meta",
+    base = file("meta"),
+    settings = json4sSettings  ++ Seq(
+      libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
+      libraryDependencies <++= scalaVersion { sv => Seq(paranamer, scalap(sv)) },
+      libraryDependencies ++= Seq(specs, scalacheck, mockito),
+      initialCommands in (Test, console) := """
+        |import org.json4s._
+        |import reflect._
+        |import scala.tools.scalap.scalax.rules.scalasig._
+        """.stripMargin
+    )
+  ) dependsOn(ast % "compile;test->test")
+
   lazy val core = Project(
     id = "json4s-core",
     base = file("core"),
     settings = json4sSettings ++ Seq(
-      libraryDependencies <++= scalaVersion { sv => Seq(paranamer, scalap(sv)) },
       initialCommands in (Test, console) := """
           |import org.json4s._
           |import reflect._
           |import scala.tools.scalap.scalax.rules.scalasig._
         """.stripMargin
     )
-  ) dependsOn(ast % "compile;test->test")
+  ) dependsOn(ast % "compile;test->test", meta % "compile;test->test")
 
   lazy val native = Project(
     id = "json4s-native",
@@ -172,7 +190,7 @@ object build extends Build {
           |import scala.tools.scalap.scalax.rules.scalasig._
         """.stripMargin
     )
-  ) dependsOn(core, native, json4sExt, scalazExt, jacksonSupport, mongo)
+  ) dependsOn(core, native, json4sExt, scalazExt, jacksonSupport, mongo, meta)
 
   lazy val benchmark = Project(
     id = "json4s-benchmark",

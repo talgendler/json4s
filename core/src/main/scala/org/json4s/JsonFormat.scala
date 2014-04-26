@@ -235,7 +235,7 @@ object DefaultJsonFormats extends DoubleJsonFormats
 
 trait DefaultJsonFormats {
 
-  implicit def GenericFormat[T](implicit reader: Reader[T], writer: Writer[T]): JsonFormat[T] = new JsonFormat[T] {
+  def GenericFormat[T](implicit reader: Reader[T], writer: Writer[T]): JsonFormat[T] = new JsonFormat[T] {
     def write(obj: T): _root_.org.json4s.JValue = writer.write(obj)
     def read(value: _root_.org.json4s.JValue): T = reader.read(value)
   }

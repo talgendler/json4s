@@ -53,7 +53,7 @@ object Extraction {
   def extractOpt[A](json: JValue)(implicit formats: Formats, mf: Manifest[A]): Option[A] =
     try { Option(extract(json)(formats, mf)) } catch { case _: MappingException => None }
 
-  def extract(json: JValue, target: TypeInfo)(implicit formats: Formats): Any = extract(json, ScalaType(target))
+  def extract(json: JValue, target: TypeInfo)(implicit formats: Formats): Any = extract(json, DefaultScalaType(target))
 
   /** Decompose a case class into JSON.
    * <p>
@@ -300,7 +300,7 @@ object Extraction {
     }
   }
 
-  def extract(json: JValue, scalaType: ScalaType)(implicit formats: Formats): Any = {
+  def extract(json: JValue, scalaType: DefaultScalaType)(implicit formats: Formats): Any = {
     if (scalaType.isEither) {
       import scala.util.control.Exception.allCatch
       (allCatch opt {
@@ -334,8 +334,9 @@ object Extraction {
     }
   }
 
-  private class CollectionBuilder(json: JValue, tpe: ScalaType)(implicit formats: Formats) {
+  private class CollectionBuilder(json: JValue, tpe: DefaultScalaType)(implicit formats: Formats) {
     private[this] val typeArg = tpe.typeArgs.head
+
     private[this] def mkCollection(constructor: Array[_] => Any) = {
       val array: Array[_] = json match {
         case JArray(arr)      => arr.map(extract(_, typeArg)).toArray
@@ -431,7 +432,7 @@ object Extraction {
           val x = if (json == JNothing && default.isDefined) default.get() else extract(json, descr.argType)
           if (descr.isOptional) { if (x == null) defv(None) else x }
           else if (x == null) {
-            if(!default.isDefined && descr.argType <:< ScalaType(manifest[AnyVal])) {
+            if(!default.isDefined && descr.argType <:< DefaultScalaType(manifest[AnyVal])) {
               throw new MappingException("Null invalid value for a sub-type of AnyVal") 
             } else {
               defv(x)
@@ -475,7 +476,7 @@ object Extraction {
       }
     }
 
-    private[this] def mkWithTypeHint(typeHint: String, fields: List[JField], typeInfo: ScalaType) = {
+    private[this] def mkWithTypeHint(typeHint: String, fields: List[JField], typeInfo: DefaultScalaType) = {
       val obj = JObject(fields filterNot (_._1 == formats.typeHintFieldName))
       val deserializer = formats.typeHints.deserialize
       if (!deserializer.isDefinedAt(typeHint, obj)) {
@@ -492,7 +493,7 @@ object Extraction {
       }
   }
 
-  private[this] def customOrElse(target: ScalaType, json: JValue)(thunk: JValue => Any)(implicit formats: Formats): Any = {
+  private[this] def customOrElse(target: DefaultScalaType, json: JValue)(thunk: JValue => Any)(implicit formats: Formats): Any = {
     val custom = formats.customDeserializer(formats)
     val targetType = target.typeInfo
     if (custom.isDefinedAt(targetType, json)) {
@@ -500,7 +501,7 @@ object Extraction {
     } else thunk(json)
   }
 
-  private[this] def convert(json: JValue, target: ScalaType, formats: Formats, default: Option[() => Any]): Any = {
+  private[this] def convert(json: JValue, target: DefaultScalaType, formats: Formats, default: Option[() => Any]): Any = {
     val targetType = target.erasure
     json match {
       case JInt(x) if (targetType == classOf[Int]) => x.intValue

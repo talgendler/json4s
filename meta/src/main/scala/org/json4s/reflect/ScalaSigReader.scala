@@ -1,5 +1,4 @@
-package org.json4s
-package reflect
+package org.json4s.reflect
 
 import scala.tools.scalap.scalax.rules.scalasig._
 import annotation.tailrec
@@ -16,13 +15,13 @@ object ScalaSigReader {
     findArgType(cstr, argNames.indexOf(argName), typeArgIndexes)
   }
 
-  def readConstructor(argName: String, clazz: ScalaType, typeArgIndex: Int, argNames: List[String]): Class[_] = {
+  def readConstructor(argName: String, clazz: DefaultScalaType, typeArgIndex: Int, argNames: List[String]): Class[_] = {
     val cl = findClass(clazz.erasure)
     val cstr = findConstructor(cl, argNames).getOrElse(fail("Can't find constructor for " + clazz))
     findArgType(cstr, argNames.indexOf(argName), typeArgIndex)
   }
 
-  def readConstructor(argName: String, clazz: ScalaType, typeArgIndexes: List[Int], argNames: List[String]): Class[_] = {
+  def readConstructor(argName: String, clazz: DefaultScalaType, typeArgIndexes: List[Int], argNames: List[String]): Class[_] = {
     val cl = findClass(clazz.erasure)
     val cstr = findConstructor(cl, argNames).getOrElse(fail("Can't find constructor for " + clazz))
     findArgType(cstr, argNames.indexOf(argName), typeArgIndexes)

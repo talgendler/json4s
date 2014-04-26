@@ -4,8 +4,7 @@ import com.thoughtworks.paranamer.{BytecodeReadingParanamer, CachingParanamer}
 import java.lang.reflect.{Constructor, ParameterizedType, Type}
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConverters._
-import java.util.Date
-import java.sql.Timestamp
+//import org.json4s.DefaultFormats
 
 package object reflect {
 
@@ -57,7 +56,7 @@ package object reflect {
   case class TypeInfo(clazz: Class[_], parameterizedType: Option[ParameterizedType])
 
   private[reflect] trait SourceType {
-    def scalaType: ScalaType
+    def scalaType: DefaultScalaType
   }
 
   trait ParameterNameReader {
@@ -67,31 +66,32 @@ package object reflect {
   trait ReflectorDescribable[T] {
     def companionClasses: List[(Class[_], AnyRef)]
     def paranamer: ParameterNameReader
-    def scalaType: ScalaType
+    def scalaType: DefaultScalaType
   }
-
-  implicit def scalaTypeDescribable(t: ScalaType)(implicit formats: Formats = DefaultFormats): ReflectorDescribable[ScalaType] = new ReflectorDescribable[ScalaType] {
-    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
-    val paranamer: ParameterNameReader = formats.parameterNameReader
-    val scalaType: ScalaType = t
-  }
-
-  implicit def classDescribable(t: Class[_])(implicit formats: Formats = DefaultFormats): ReflectorDescribable[Class[_]] = new ReflectorDescribable[Class[_]] {
-    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
-    val paranamer: ParameterNameReader = formats.parameterNameReader
-    val scalaType: ScalaType =  Reflector.scalaTypeOf(t)
-  }
-
-  implicit def stringDescribable(t: String)(implicit formats: Formats = DefaultFormats): ReflectorDescribable[String] = new ReflectorDescribable[String] {
-    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
-    val paranamer: ParameterNameReader = formats.parameterNameReader
-    val scalaType: ScalaType = Reflector.scalaTypeOf(t) getOrElse (throw new MappingException("Couldn't find class for " + t))
-  }
-
+//
+//  implicit def scalaTypeDescribable(t: DefaultScalaType)(implicit formats: Formats = DefaultFormats): ReflectorDescribable[DefaultScalaType] = new ReflectorDescribable[DefaultScalaType] {
+//    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
+//    val paranamer: ParameterNameReader = formats.parameterNameReader
+//    val scalaType: DefaultScalaType = t
+//  }
+//
+//  implicit def classDescribable(t: Class[_])(implicit formats: Formats = DefaultFormats): ReflectorDescribable[Class[_]] = new ReflectorDescribable[Class[_]] {
+//    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
+//    val paranamer: ParameterNameReader = formats.parameterNameReader
+//    val scalaType: DefaultScalaType =  Reflector.scalaTypeOf(t)
+//  }
+//
+//  implicit def stringDescribable(t: String)(implicit formats: Formats = DefaultFormats): ReflectorDescribable[String] = new ReflectorDescribable[String] {
+//    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
+//    val paranamer: ParameterNameReader = formats.parameterNameReader
+//    val scalaType: DefaultScalaType = Reflector.scalaTypeOf(t) getOrElse (throw new MappingException("Couldn't find class for " + t))
+//  }
+//
   object ParanamerReader extends ParameterNameReader {
     def lookupParameterNames(constructor: Constructor[_]): Seq[String] =
       paranamer.lookupParameterNames(constructor).toSeq
   }
 
   def fail(msg: String, cause: Exception = null) = throw new MappingException(msg, cause)
+
 }

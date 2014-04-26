@@ -16,10 +16,6 @@
 
 package org.json4s
 
-import java.util.Locale.ENGLISH
-import java.io.StringWriter
-import collection.immutable
-
 object JsonAST {
 
   /**
@@ -201,14 +197,14 @@ object JsonAST {
 
   case class JObject(obj: List[JField]) extends JValue {
     type Values = Map[String, Any]
-    def values = obj.map { case (n, v) ⇒ (n, v.values) } toMap
+    def values = obj.map({ case (n, v) ⇒ (n, v.values) }).toMap
 
     override def equals(that: Any): Boolean = that match {
       case o: JObject ⇒ obj.toSet == o.obj.toSet
       case _ ⇒ false
     }
 
-    override def hashCode = obj.toSet[JField].hashCode
+    override def hashCode = obj.toSet[JField].hashCode()
   }
   case object JObject {
     def apply(fs: JField*): JObject = JObject(fs.toList)

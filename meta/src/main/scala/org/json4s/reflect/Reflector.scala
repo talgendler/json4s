@@ -1,5 +1,4 @@
-package org.json4s
-package reflect
+package org.json4s.reflect
 
 import java.{util => jutil}
 import java.lang.reflect._
@@ -15,7 +14,7 @@ object Reflector {
 
   private[this] val rawClasses = new Memo[Type, Class[_]]
   private[this] val unmangledNames = new Memo[String, String]
-  private[this] val descriptors = new Memo[ScalaType, ObjectDescriptor]
+  private[this] val descriptors = new Memo[DefaultScalaType, ObjectDescriptor]
 
   private[this] val primitives = {
       Set[Type](classOf[String], classOf[Int], classOf[Long], classOf[Double],
@@ -29,28 +28,28 @@ object Reflector {
 
   def isPrimitive(t: Type, extra: Set[Type] = Set.empty) = (primitives ++ extra) contains t
 
-  def scalaTypeOf[T](implicit mf: Manifest[T]): ScalaType = ScalaType(mf)
-  def scalaTypeOf(clazz: Class[_]): ScalaType = ScalaType(ManifestFactory.manifestOf(clazz))
-  def scalaTypeOf(t: Type): ScalaType = ScalaType(ManifestFactory.manifestOf(t))
+  def scalaTypeOf[T](implicit mf: Manifest[T]): DefaultScalaType = DefaultScalaType(mf)
+  def scalaTypeOf(clazz: Class[_]): DefaultScalaType = DefaultScalaType(ManifestFactory.manifestOf(clazz))
+  def scalaTypeOf(t: Type): DefaultScalaType = DefaultScalaType(ManifestFactory.manifestOf(t))
 
-  private[this] val stringTypes = new Memo[String, Option[ScalaType]]
-  def scalaTypeOf(name: String): Option[ScalaType] =
+  private[this] val stringTypes = new Memo[String, Option[DefaultScalaType]]
+  def scalaTypeOf(name: String): Option[DefaultScalaType] =
     stringTypes(name, ScalaSigReader.resolveClass[AnyRef](_, ClassLoaders) map (c => scalaTypeOf(c)))
-
-  def describe[T](implicit mf: Manifest[T], formats: Formats = DefaultFormats): ObjectDescriptor =
-    describe(scalaTypeDescribable(scalaTypeOf[T])(formats))
-
+//
+//  def describe[T](implicit mf: Manifest[T], formats: Formats = DefaultFormats): ObjectDescriptor =
+//    describe(scalaTypeDescribable(scalaTypeOf[T])(formats))
+//
   def describe(st: ReflectorDescribable[_]): ObjectDescriptor =
     descriptors(st.scalaType, createDescriptor(_, st.paranamer, st.companionClasses))
 
 
-  def createDescriptor(tpe: ScalaType, paramNameReader: ParameterNameReader = ParanamerReader, companionMappings: List[(Class[_], AnyRef)] = Nil): ObjectDescriptor = {
+  def createDescriptor(tpe: DefaultScalaType, paramNameReader: ParameterNameReader = ParanamerReader, companionMappings: List[(Class[_], AnyRef)] = Nil): ObjectDescriptor = {
 //    println("Creating descriptor for " + tpe.fullName + " and paramNameReader: " + paramNameReader + " and mappings: " + companionMappings)
     if (tpe.isPrimitive) PrimitiveDescriptor(tpe)
     else new ClassDescriptorBuilder(tpe, paramNameReader, companionMappings).result
   }
 
-  private class ClassDescriptorBuilder(tpe: ScalaType, paramNameReader: ParameterNameReader = ParanamerReader, companionMappings: List[(Class[_], AnyRef)] = Nil) {
+  private class ClassDescriptorBuilder(tpe: DefaultScalaType, paramNameReader: ParameterNameReader = ParanamerReader, companionMappings: List[(Class[_], AnyRef)] = Nil) {
     var companion: Option[SingletonDescriptor] = None
     var triedCompanion = false
 
@@ -61,7 +60,7 @@ object Reflector {
         val f = ls.next()
         val mod = f.getModifiers
         if (!(Modifier.isStatic(mod) || Modifier.isTransient(mod) || Modifier.isVolatile(mod)  || f.isSynthetic)) {
-          val st = ScalaType(f.getType, f.getGenericType match {
+          val st = DefaultScalaType(f.getType, f.getGenericType match {
             case p: ParameterizedType => p.getActualTypeArguments.toSeq.zipWithIndex map { case (cc, i) =>
               if (cc == classOf[java.lang.Object]) Reflector.scalaTypeOf(ScalaSigReader.readField(f.getName, clazz, i))
               else Reflector.scalaTypeOf(cc)
@@ -81,7 +80,7 @@ object Reflector {
 
     def properties: Seq[PropertyDescriptor] = fields(tpe.erasure)
 
-    def ctorParamType(name: String, index: Int, owner: ScalaType, ctorParameterNames: List[String], t: Type, container: Option[(ScalaType, List[Int])] = None): ScalaType = {
+    def ctorParamType(name: String, index: Int, owner: DefaultScalaType, ctorParameterNames: List[String], t: Type, container: Option[(DefaultScalaType, List[Int])] = None): DefaultScalaType = {
       val idxes = container.map(_._2.reverse)
       t  match {
         case v: TypeVariable[_] =>
