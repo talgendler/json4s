@@ -206,9 +206,12 @@ object JsonAST {
 
     override def hashCode = obj.toSet[JField].hashCode()
   }
-  case object JObject {
+
+
+  object JObject {
     def apply(fs: JField*): JObject = JObject(fs.toList)
   }
+
 
   case class JArray(arr: List[JValue]) extends JValue {
     type Values = List[Any]
@@ -221,5 +224,7 @@ object JsonAST {
     def apply(name: String, value: JValue) = (name, value)
     def unapply(f: JField): Option[(String, JValue)] = Some(f)
   }
+
+
 }
 

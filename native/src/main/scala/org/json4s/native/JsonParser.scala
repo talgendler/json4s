@@ -199,9 +199,9 @@ object JsonParser {
   }
 
   class Parser(buf: Buffer, useBigDecimalForDouble: Boolean) {
-    import java.util.LinkedList
 
-    private[this] val blocks = new LinkedList[BlockMode]()
+
+    private[this] val blocks = collection.mutable.ArrayBuffer.empty[BlockMode]
     private[this] var fieldNameMode = true
 
     def fail(msg: String) = throw new ParseException(s"$msg\nNear: ${buf.near}", null)
@@ -209,7 +209,6 @@ object JsonParser {
     /** Parse next Token from stream.
      */
     def nextToken: Token = {
-      def isDelimiter(c: Char) = c == ' ' || c == '\n' || c == ',' || c == '\r' || c == '\t' || c == '}' || c == ']'
 
       def parseString: String = 
         try {
@@ -243,18 +242,18 @@ object JsonParser {
 
       while (true) {
         buf.next match {
-          case c if EOF == c => 
+          case `EOF` =>
             buf.automaticClose
             return End
           case '{' =>
-            blocks.addFirst(OBJECT)
+            OBJECT +=: blocks
             fieldNameMode = true
             return OpenObj
           case '}' =>
-            blocks.poll
+            blocks.remove(0)
             return CloseObj
           case '"' =>
-            if (fieldNameMode && blocks.peek == OBJECT) return FieldStart(parseString)
+            if (fieldNameMode && blocks.headOption == Some(OBJECT)) return FieldStart(parseString)
             else {
               fieldNameMode = true
               return StringVal(parseString)
@@ -262,13 +261,13 @@ object JsonParser {
           case 't' =>
             fieldNameMode = true
             if (buf.next == 'r' && buf.next == 'u' && buf.next == 'e') {
-              return BoolVal(true)
+              return BoolVal(value = true)
             }
             fail("expected boolean")
           case 'f' =>
             fieldNameMode = true
             if (buf.next == 'a' && buf.next == 'l' && buf.next == 's' && buf.next == 'e') {
-              return BoolVal(false)
+              return BoolVal(value = false)
             }
             fail("expected boolean")
           case 'n' =>
@@ -278,19 +277,19 @@ object JsonParser {
             }
             fail("expected null")
           case ':' =>
-            if (blocks.peek == ARRAY) fail("Colon in an invalid position")
+            if (blocks.headOption == Some(ARRAY)) fail("Colon in an invalid position")
             fieldNameMode = false
           case '[' =>
-            blocks.addFirst(ARRAY)
+            ARRAY +=: blocks
             return OpenArr
           case ']' =>
             fieldNameMode = true
-            blocks.poll
+            blocks.remove(0)
             return CloseArr
           case c if Character.isDigit(c) || c == '-' || c == '+' =>
             fieldNameMode = true
             return parseValue(c)
-          case c if isDelimiter(c) =>
+          case ' ' | '\n' | ',' | '\r' | '\t' | '}' | ']' =>
           case c => fail(s"unknown token $c")
         }
       }

@@ -1,7 +1,7 @@
 package org.json4s.reflect
 
-trait ScalaType {
-  def typeArgs: Seq[ScalaType]
+trait ScalaTypeBase {
+  def typeArgs: Seq[ScalaTypeBase]
   def isArray: Boolean
   def rawFullName: String
   def rawSimpleName: String

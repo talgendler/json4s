@@ -1,11 +1,11 @@
-package org.json4s.macros
+package org.json4s.reflect
 
 import scala.reflect.macros._
 import java.util.Date
 import java.sql.Timestamp
 import scala.annotation.tailrec
 
-class Helper[C <: Context](val c: C) {
+private[reflect] class Helper[C <: Context](val c: C) {
 
   import c.universe._
 

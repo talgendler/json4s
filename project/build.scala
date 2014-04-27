@@ -91,10 +91,12 @@ object build extends Build {
       libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
       libraryDependencies <++= scalaVersion { sv => Seq(paranamer, scalap(sv)) },
       libraryDependencies ++= Seq(specs, scalacheck, mockito),
+      addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
+      libraryDependencies += "org.scalamacros" %% "quasiquotes" % "2.0.0",
       initialCommands in (Test, console) := """
         |import org.json4s._
         |import reflect._
-        |import scala.tools.scalap.scalax.rules.scalasig._
+        |import scala.reflect.runtime.{universe => u}
         """.stripMargin
     )
   ) dependsOn(ast % "compile;test->test")

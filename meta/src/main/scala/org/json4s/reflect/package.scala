@@ -55,19 +55,19 @@ package object reflect {
 
   case class TypeInfo(clazz: Class[_], parameterizedType: Option[ParameterizedType])
 
-  private[reflect] trait SourceType {
-    def scalaType: DefaultScalaType
-  }
+//  private[reflect] trait SourceType {
+//    def scalaType: DefaultScalaType
+//  }
 
   trait ParameterNameReader {
     def lookupParameterNames(constructor: Constructor[_]): Seq[String]
   }
-
-  trait ReflectorDescribable[T] {
-    def companionClasses: List[(Class[_], AnyRef)]
-    def paranamer: ParameterNameReader
-    def scalaType: DefaultScalaType
-  }
+//
+//  trait ReflectorDescribable[T] {
+//    def companionClasses: List[(Class[_], AnyRef)]
+//    def paranamer: ParameterNameReader
+//    def scalaType: ScalaType[T]
+//  }
 //
 //  implicit def scalaTypeDescribable(t: DefaultScalaType)(implicit formats: Formats = DefaultFormats): ReflectorDescribable[DefaultScalaType] = new ReflectorDescribable[DefaultScalaType] {
 //    val companionClasses: List[(Class[_], AnyRef)] = formats.companions
@@ -87,11 +87,11 @@ package object reflect {
 //    val scalaType: DefaultScalaType = Reflector.scalaTypeOf(t) getOrElse (throw new MappingException("Couldn't find class for " + t))
 //  }
 //
-  object ParanamerReader extends ParameterNameReader {
-    def lookupParameterNames(constructor: Constructor[_]): Seq[String] =
-      paranamer.lookupParameterNames(constructor).toSeq
-  }
-
-  def fail(msg: String, cause: Exception = null) = throw new MappingException(msg, cause)
+//  object ParanamerReader extends ParameterNameReader {
+//    def lookupParameterNames(constructor: Constructor[_]): Seq[String] =
+//      paranamer.lookupParameterNames(constructor).toSeq
+//  }
+//
+//  def fail(msg: String, cause: Exception = null) = throw new MappingException(msg, cause)
 
 }
