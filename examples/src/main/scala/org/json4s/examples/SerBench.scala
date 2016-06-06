@@ -4,7 +4,7 @@ package examples
 import java.util.Date
 import org.json4s._
 import java.io._
-import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.util.concurrent.atomic.AtomicLong
 
 object SerBench extends Benchmark {
@@ -53,7 +53,7 @@ object SerBench extends Benchmark {
 
   val mapper = new ObjectMapper()
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     println("## Serialization  ")
 
     val str = project.toString

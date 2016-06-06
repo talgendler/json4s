@@ -1,8 +1,6 @@
 package org.json4s
 package jackson
 
-import com.fasterxml.jackson.databind.ObjectWriter
-
 import scala.reflect.Manifest
 import java.io.OutputStream
 
@@ -30,7 +28,7 @@ object Serialization extends Serialization {
     out
   }
 
-  def write[A <: AnyRef](a: A, out: OutputStream)(implicit formats: Formats) {
+  def write[A <: AnyRef](a: A, out: OutputStream)(implicit formats: Formats): Unit = {
     JsonMethods.mapper.writeValue(out, Extraction.decompose(a)(formats: Formats))
   }
 
